@@ -1,27 +1,42 @@
 #!/usr/bin/python3
-from api.v1.views import app_views
-from flask import jsonify
-from models import storage
-from models.state import State
-from models.city import City
-from models.amenity import Amenity
-from models.place import Place
-from models.review import Review
-from models.user import User
+'''testing the index route'''
+import unittest
+import pep8
+from os import getenv
+import requests
+import json
+from api.v1.app import *
 
-@app_views.route('/status', methods=['GET'])
-def get_status():
-    return jsonify({"status": "OK"})
 
-@app_views.route('/stats', methods=['GET'])
-def get_stats():
-    stats = {
-        "amenities": storage.count(Amenity),
-        "cities": storage.count(City),
-        "places": storage.count(Place),
-        "reviews": storage.count(Review),
-        "states": storage.count(State),
-        "users": storage.count(User)
-    }
-    return jsonify(stats)
+storage = getenv("HBNB_TYPE_STORAGE")
 
+
+class TestIndex(unittest.TestCase):
+    '''test index'''
+    def test_status(self):        
+        '''test status function'''
+        with app.test_client() as c:
+            resp = c.get('/api/v1/status')
+            data = json.loads(resp.data.decode('utf-8'))
+            self.assertEqual(data, {'status': 'OK'})
+
+
+    def test_count(self):
+        '''test count'''
+        with app.test_client() as c:
+            resp = c.get('/api/v1/stats')
+            data = json.loads(resp.data.decode('utf-8'))
+            for k, v in data.items():
+                self.assertIsInstance(v, int)
+                self.assertTrue(v >= 0)
+
+    def test_404(self):
+        '''test for 404 error'''
+        with app.test_client() as c:
+            resp = c.get('/api/v1/yabbadabbadoo')
+            data = json.loads(resp.data.decode('utf-8'))
+            self.assertEqual(data, {"error": "Not found"})
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -1,17 +1,19 @@
-from flask import Flask
-from models import storage
-from api.v1.views import app_views
 import os
+from api.v1.app import app
+from api.v1.views import *
+import unittest
+import tempfile
+import flask
 
-app = Flask(__name__)
-app.register_blueprint(app_views)
 
-@app.teardown_appcontext
-def teardown_db(exception):
-    storage.close()
+class AppTestCase(unittest.TestCase):
+    '''test app.py'''
 
-if __name__ == "__main__":
-    host = os.getenv('HBNB_API_HOST', '0.0.0.0')
-    port = os.getenv('HBNB_API_PORT', '5000')
-    app.run(host=host, port=port, threaded=True)
+    def test_create_app(self):
+        '''check app instance with blueprint is created'''
+        with app.test_client() as c:
+            self.assertIsInstance(c, flask.testing.FlaskClient)
 
+
+if __name__ == '__main__':
+    unittest.main()
